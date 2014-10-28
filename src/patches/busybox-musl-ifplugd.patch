@@ -1,0 +1,41 @@
+From b254f07f92ea3cfa22d9a3a10968c15f0a3a7485 Mon Sep 17 00:00:00 2001
+From: John Spencer <maillist-busybox@barfooze.de>
+Date: Mon, 27 Jan 2014 23:20:01 +0100
+Subject: [PATCH] ifplugd: move linux header inclusion after userspace headers
+
+this allows linux' new libc-compat.h to kick in, which prevents
+redefinition of some structs that both userspace and kernel
+headers define. without this patch, struct ethhdr gets redefined
+and breaks the build against musl libc.
+
+Signed-Off-By: John Spencer <maillist-busybox@barfooze.de>
+---
+ networking/ifplugd.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/networking/ifplugd.c b/networking/ifplugd.c
+index b578f4c..8fad69a 100644
+--- a/networking/ifplugd.c
++++ b/networking/ifplugd.c
+@@ -34,16 +34,17 @@
+ #include "libbb.h"
+ 
+ #include "fix_u32.h"
+-#include <linux/if.h>
+-#include <linux/mii.h>
+-#include <linux/ethtool.h>
+ #ifdef HAVE_NET_ETHERNET_H
+ # include <net/ethernet.h>
+ #endif
++#include <syslog.h>
++
++#include <linux/if.h>
++#include <linux/mii.h>
++#include <linux/ethtool.h>
+ #include <linux/netlink.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/sockios.h>
+-#include <syslog.h>
+ 
+ #define __user
+ #include <linux/wireless.h>
