@@ -1,0 +1,64 @@
+#!/bin/ash
+. /etc/init.d/functions
+echo -n "Mounting /proc             : "
+mount -n -t proc /proc /proc
+check_status
+echo -n "Mounting /sys              : "
+mount -n -t sysfs sysfs /sys
+check_status
+echo -n "Mounting /dev              : "
+mount -n -t tmpfs mdev /dev
+check_status
+echo -n "Mounting /dev/pts          : "
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
+check_status
+echo -n "Mounting Shared Memory     : "
+mkdir /dev/shm
+mount -t tmpfs none /dev/shm
+check_status
+echo -n "Enabling Hot-Plug          : "
+echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+check_status
+echo -n "Populating /dev            : "
+mkdir /dev/input
+mkdir /dev/snd
+mdev -s
+check_status
+echo -n "Checking Local Filesystems : "
+fsck -A -C -R -T -t nonnfs,nosmbfs
+check_status
+echo -n "Remounting Root RW         : "
+mount -o remount,rw /
+check_status
+echo -n "Mounting Other Filesystems : "
+mount -a
+check_status
+echo -n "Setting Hostname           : "
+hostname -F /etc/hostname
+check_status
+echo -n "Cleaning Up System         : "
+ln -s ../tmp /var/tmp
+touch /var/run/utmp
+touch /var/log/btmp
+touch /var/log/wtmp
+touch /var/log/lastlog
+touch /var/log/messages
+chmod 0664 /var/run/utmp
+chmod 0664 /var/log/wtmp
+chmod 0664 /var/log/btmp
+chmod 0664 /var/log/lastlog
+chmod 0660 /var/log/messages
+check_status
+echo -n "Setting up interface lo   : "
+ifconfig lo up 127.0.0.1
+check_status
+echo -n "Running start scripts     : "
+for i in /etc/init.d/start/S*
+do
+    if [ -x $i ]; then
+	$i start
+    fi
+done
+exit 0
+# End /etc/init.d/rcS

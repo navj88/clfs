@@ -174,7 +174,6 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel\
 	lib/{firmware,modules},mnt,opt,proc,sbin,srv,sys,\
 	var/{cache,lib,local,lock,log,opt,run,spool},\
 	usr/{,local/}{bin,include,lib,sbin,share,src}}
-	@mkdir -pv $(CLFS_FS)/usr/share/udhcpc 
 	@install -dv -m 0750 $(CLFS_FS)/root
 	@install -dv -m 1777 $(CLFS_FS)/tmp
 	@touch $@
@@ -230,29 +229,7 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel\
 	@touch $@
 .install-bootscripts: .install-dir
 	$(CROSS-VARS)
-	@mkdir -pv $(CLFS_FS)/etc/init.d/{start,stop}
-	@ln -svf ../proc/mounts $(CLFS_FS)/etc/mtab
-	@echo -e "$(CLFS_NAME)" > $(CLFS_FS)/etc/hostname
-	@echo -e "$(PASSWD)"    | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/passwd
-	@echo -e "$(GROUP)"     | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/group
-	@echo -e "$(INITTAB)"   | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/inittab
-	@echo -e "$(RCS)"       | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/init.d/rcS
-	@echo -e "$(RCK)"       | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/init.d/rcK
-	@echo -e "$(FUNCTIONS)" | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/init.d/functions
-	@echo -e "$(SYSLOG)"    | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/init.d/syslog
-	@echo -e "$(MDEV)"      | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/mdev.conf
-	@echo -e "$(FSTAB)"     | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/fstab
-	@echo -e "$(PROFILE)"   | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/profile
-	@echo -e "$(INTERFACES)"| sed -e 's/^[ ]//' > $(CLFS_FS)/etc/network/interfaces
-	@echo -e "$(HOSTS)"     | sed -e 's/^[ ]//' > $(CLFS_FS)/etc/hosts
-	@echo -e "$(UDHCPC)"    | sed -e 's/^[ ]//' > \
-	$(CLFS_FS)/usr/share/udhcpc/default.script
-	@chmod -v 754 $(CLFS_FS)/usr/share/udhcpc/default.script
-	@chmod -v 754 $(CLFS_FS)/etc/init.d/rcS
-	@chmod -v 754 $(CLFS_FS)/etc/init.d/rcK
-	@chmod -v 754 $(CLFS_FS)/etc/init.d/syslog
-	@ln -svf ../syslog $(CLFS_FS)/etc/init.d/start/00_syslog
-	@ln -svf ../syslog $(CLFS_FS)/etc/init.d/stop/99_syslog
+	@cp -purv $(CLFS_SRC)/scripts/* $(CLFS_FS)
 	@touch $@
 .install-lib: .install-dir
 	@cp -vP $(CLFS_CTOOLS_TG)/lib/*.so* $(CLFS_FS)/lib
@@ -266,10 +243,10 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel\
 
 
 
-clean-all : clean-env clean-ctools clean-fs clean-src
+clean-all : clean-ctools clean-fs clean-src
 
 clean-env :
-	rm -f $(CLFS)/.bash*
+	rm -f ~/.bash*
 clean-ctools:
 	rm -Rf $(CLFS_CTOOLS)
 	rm -f $(CLFS)/.buil*
