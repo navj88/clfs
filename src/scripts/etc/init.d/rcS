@@ -3,6 +3,7 @@
 echo -n "Mounting /proc             : "
 mount -n -t proc /proc /proc
 check_status
+echo 3 > /proc/sys/kernel/printk
 echo -n "Mounting /sys              : "
 mount -n -t sysfs sysfs /sys
 check_status
