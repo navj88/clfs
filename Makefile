@@ -18,8 +18,8 @@ CLFS:=$(shell pwd)
 CLFS_SRC:=$(CLFS)/src
 CLFS_CTOOLS:=$(CLFS)/cross-tools
 CLFS_CTOOLS_TG:=$(CLFS_CTOOLS)/$(CLFS_TARGET)
-CLFS_FS=$(CLFS)/targetfs
-PATH=$(CLFS_CTOOLS)/bin:/bin/:/usr/bin
+CLFS_FS:=$(CLFS)/targetfs
+PATH:=$(CLFS_CTOOLS)/bin:/bin/:/usr/bin
 
 CROSS-VARS = \
 	$(eval CC:=$(CLFS_TARGET)-gcc) \
@@ -29,6 +29,8 @@ CROSS-VARS = \
 	$(eval RANLIB:=$(CLFS_TARGET)-ranlib) \
 	$(eval READELF:=$(CLFS_TARGET)-readelf) \
 	$(eval STRIP:=$(CLFS_TARGET)-strip)
+
+KERNEL_CONFIG =
 
 export
 print-var : 
@@ -41,16 +43,14 @@ include file-config.mk
 ############################################################
 # Configuracion del entorno ################################
 ############################################################
-set-env : .bash_profile .bashrc
-.bash_profile :
-	@echo -e "$(BASH_PROFILE)" | sed -e 's/^[ ]//' > .bash_profile
-.bashrc :
-	@echo -e "$(BASHRC)" | sed -e 's/^[ ]//' > .bashrc
+set-env :
+	@echo -e "$(BASH_PROFILE)" | sed -e 's/^[ ]//' > ~/.bash_profile
+	@echo -e "$(BASHRC)" | sed -e 's/^[ ]//' > ~/.bashrc
 ############################################################
 # Cross Compile Tools ######################################
 ############################################################
 .PHONY: cross-tools
-cross-tools: .build-gcc-final
+cross-tools: .build-gcc-final .build-vars
 
 .build-dir:
 	@mkdir -pv $(CLFS_CTOOLS_TG)
@@ -62,8 +62,8 @@ cross-tools: .build-gcc-final
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
 	INSTALL_HDR_PATH=$(CLFS_CTOOLS_TG) headers_install
 	cd $(CLFS_CTOOLS_TG) && \
-	patch -Nup2 -i ~/src/kernel-headers_libc-compat.patch && \
-	patch -Nup2 -i ~/src/kernel-headers_musl.patch
+	patch -Nup2 -i $(CLFS_SRC)/kernel-headers_libc-compat.patch && \
+	patch -Nup2 -i $(CLFS_SRC)/kernel-headers_musl.patch
 	@touch $@
 .build-binutils : .build-linux-hdr
 	cd $(CLFS_SRC) && tar xjf binutils-2.24.tar.bz2
@@ -129,7 +129,7 @@ cross-tools: .build-gcc-final
 	rm -Rf $(CLFS_SRC)/musl-1.0.3
 	@touch $@
 .build-gcc-final : .build-musl
-	cd $(CLFS_SRC) && tar xjf gcc-4.7.3.tar.bz2
+	@cd $(CLFS_SRC) && tar xjf gcc-4.7.3.tar.bz2
 	@cd $(CLFS_SRC)/gcc-4.7.3 &&\
 	  patch -Np1 -i ../gcc-4.7.3-musl-1.patch &&\
 	  tar xjf ../mpfr-3.1.2.tar.bz2 && mv -v mpfr-3.1.2 mpfr &&\
@@ -158,8 +158,41 @@ cross-tools: .build-gcc-final
 	$(MAKE) -C $(CLFS_SRC)/gcc-build install
 	rm -Rf $(CLFS_SRC)/gcc-{build,4.7.3}
 	@touch $@
-.cross-vars :
-	@echo -e "$(BASHRC)" "$(BASHRC_CROSS)" | sed -e 's/^[ ]//' > .bashrc
+.build-lzo : .build-gcc-final
+	$(CROSS-VARS)
+	@cd $(CLFS_SRC) && tar xzf lzo-2.08.tar.gz
+	cd $(CLFS_SRC)/lzo-2.08 && \
+	./configure \
+	  --host=$(CLFS_TARGET) \
+	  --prefix=$(CLFS_CTOOLS_TG) \
+	  --enable-shared
+	$(MAKE) -C $(CLFS_SRC)/lzo-2.08 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/lzo-2.08 install
+	@rm -Rf $(CLFS_SRC)/lzo-2.08
+	@touch $@
+.build-zlib : .build-gcc-final
+	$(CROSS-VARS)
+	@cd $(CLFS_SRC) && tar xzf zlib-1.2.8.tar.gz
+	cd $(CLFS_SRC)/zlib-1.2.8 && \
+	CFLAGS=-Os ./configure \
+	  --shared
+	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 --prefix=$(CLFS_CTOOLS_TG) install
+	@rm -Rf $(CLFS_SRC)/zlib-1.2.8
+	@touch $@
+.build-openssl : .build-gcc-final
+	$(CROSS-VARS)
+	@cd $(CLFS_SRC) && tar xzf openssl-1.0.1j.tar.gz
+	cd $(CLFS_SRC)/openssl-1.0.1j $$ \
+	patch -Np1 -i ../openssl-001-do-not-build-docs.patch && \
+	patch -Np1 -i ../openssl-004-musl-termios.patch && \
+	./Configure linux-armv4 shared zlib-dynamic --prefix=/usr
+	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j
+	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j INSTALL_PREFIX=$(CLFS_CTOOLS_TG) install
+	@rm -Rf $(CLFS_SRC)/openssl-1.0.1j
+	@touch $@
+.build-vars :
+	@echo -e "$(BASHRC)" "$(BASHRC_CROSS)" | sed -e 's/^[ ]//' > ~/.bashrc
 	@touch $@
 ############################################################
 
@@ -208,11 +241,34 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel\
 	$(MAKE) -C $(CLFS_SRC)/iana-etc-2.30 DESTDIR=$(CLFS_FS) install
 	rm -Rf $(CLFS_SRC)/iana-etc-2.30
 	@touch $@
-.install-kernel : .install-dir
+.install-openvpn : .install-dir .build-lzo .build-openssl .build-zlib
+	$(CROSS-VARS)
+	cd $(CLFS_SRC) && tar xzf openvpn-2.3.5.tar.gz
+	cd $(CLFS_SRC)/openvpn-2.3.5 && \
+	./configure \
+	  --host=$CLFS_TARGET \
+	  --prefix=/usr \
+	  --disable-snappy \
+	  --enable-shared \
+	  --disable-plugins \
+	  --disable-debug \
+	  --enable-iproute2
+	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 DESTDIR=$(CLFS_FS) install
+	rm -Rf $(CLFS_SRC)/openvpn-2.3.5
+	@touch $@
+.install-config-kernel:
 	$(CROSS-VARS)
 	$(MAKE) -C $(CLFS_SRC)/linux mrproper
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
 	CROSS_COMPILE=$(CLFS_TARGET)- bcmrpi_defconfig
+ifdef KERNEL_CONFIG
+	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
+	CROSS_COMPILE=$(CLFS_TARGET)- menuconfig
+endif
+	@touch $@
+.install-kernel : .install-dir .install-config-kernel
+	$(CROSS-VARS)
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
 	CROSS_COMPILE=$(CLFS_TARGET)-  -j$(JOBS)
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
