@@ -1,0 +1,26 @@
+#!/bin/ash
+. /etc/init.d/functions
+
+[ -x /usr/sbin/ntpd ] || exit 0
+[ -f /etc/ntpd.conf ] || exit 0
+
+case "$1" in
+    start)
+	echo -n "Starting ntpd: "
+	start-stop-daemon -S -x /usr/sbin/ntpd
+	check_status
+	;;
+    stop)
+	echo -n "Stopping ntpd: "
+	start-stop-daemon -K -x /usr/sbin/ntpd
+	check_status
+	;;
+    restart)
+	"$0" stop
+	sleep 1
+	"$0" start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart}"
+	;;
+esac
