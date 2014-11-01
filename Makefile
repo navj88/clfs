@@ -50,7 +50,7 @@ set-env :
 # Cross Compile Tools ######################################
 ############################################################
 .PHONY: cross-tools
-cross-tools: .build-gcc-final .build-vars
+cross-tools: .build-gcc-final .build-vars .build-lzo .build-zlib .build-openssl
 
 .build-dir:
 	@mkdir -pv $(CLFS_CTOOLS_TG)
@@ -177,7 +177,7 @@ cross-tools: .build-gcc-final .build-vars
 	CFLAGS=-Os ./configure \
 	  --shared
 	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 -j$(JOBS)
-	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 --prefix=$(CLFS_CTOOLS_TG) install
+	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 prefix=$(CLFS_CTOOLS_TG) install
 	@rm -Rf $(CLFS_SRC)/zlib-1.2.8
 	@touch $@
 .build-openssl : .build-gcc-final
@@ -199,8 +199,9 @@ cross-tools: .build-gcc-final .build-vars
 # Installing Basic System ##################################
 ############################################################
 .PHONY: system
-system: cross-tools .install-busybox .install-iana-etc .install-kernel\
-	.install-bootscripts .install-boot .install-lib
+system: cross-tools .install-busybox .install-iana-etc .install-kernel \
+	.install-bootscripts .install-boot .install-lib .install-openvpn \
+	.install-config-kernel 
 .install-dir :
 	@mkdir -pv $(CLFS_FS)/{bin,boot,dev,\
 	etc/network/if-{post-{up,down},pre-{up,down},up,down}.d,home,\
@@ -246,7 +247,7 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel\
 	cd $(CLFS_SRC) && tar xzf openvpn-2.3.5.tar.gz
 	cd $(CLFS_SRC)/openvpn-2.3.5 && \
 	./configure \
-	  --host=$CLFS_TARGET \
+	  --host=$(CLFS_TARGET) \
 	  --prefix=/usr \
 	  --disable-snappy \
 	  --enable-shared \
@@ -260,14 +261,15 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel\
 .install-config-kernel:
 	$(CROSS-VARS)
 	$(MAKE) -C $(CLFS_SRC)/linux mrproper
+	@cp $(CLFS_SRC)/kernel_rpi_navj.config $(CLFS_SRC)/linux/.config
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
-	CROSS_COMPILE=$(CLFS_TARGET)- bcmrpi_defconfig
+	CROSS_COMPILE=$(CLFS_TARGET)- oldconfig
 ifdef KERNEL_CONFIG
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
 	CROSS_COMPILE=$(CLFS_TARGET)- menuconfig
 endif
 	@touch $@
-.install-kernel : .install-dir .install-config-kernel
+.install-kernel : .install-dir .install-config-kernel .install-busybox
 	$(CROSS-VARS)
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
 	CROSS_COMPILE=$(CLFS_TARGET)-  -j$(JOBS)
@@ -288,7 +290,9 @@ endif
 	@cp -purv $(CLFS_SRC)/scripts/* $(CLFS_FS)
 	@touch $@
 .install-lib: .install-dir
-	@cp -vP $(CLFS_CTOOLS_TG)/lib/*.so* $(CLFS_FS)/lib
+	$(CROSS_VARS)
+	-@cp -vP $(CLFS_CTOOLS_TG)/lib/*.so* $(CLFS_FS)/lib
+	-$(STRIP) $(CLFS)/targetfs/lib/*
 	@touch $@
 ############################################################
 
