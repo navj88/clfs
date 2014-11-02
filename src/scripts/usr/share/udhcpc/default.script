@@ -6,14 +6,6 @@
 # where to save config information for $interface:
 CFG="/var/run/udhcpc.${interface}.cfg"
 
-# names of files we might need to touch:
-RESOLV_CONF='/etc/resolv.conf'
-NTP_CONF='/etc/ntp.conf'
-
-# which interface configures DNS and NTP? Comment out if none:
-#PEERDNS_IF=eth0
-#PEERNTP_IF=eth0
-
 case "$1" in
     defconfig)
 	# bring interfaces up, but with no IP configured:
@@ -21,13 +13,6 @@ case "$1" in
 	ip link set $interface up
 	# remove any stored config info for this $interface:
 	rm -f $CFG
-	# restore any pre-dhcp config files:
-	if [ "$interface" == "$PEERDNS_IF" ] ; then
-	    [ -f ${RESOLV_CONF}.dhcsave ] && mv -f ${RESOLV_CONF}.dhcsave $RESOLV_CONF
-	fi
-	if [ "$interface" == "$PEERNTP_IF" ] ; then
-	    [ -f ${NTP_CONF}.dhcsave ] && mv -f ${NTP_CONF}.dhcsave $NTP_CONF
-	fi
 	;;
     bound)
 	# save config info for $interface:
@@ -36,21 +21,10 @@ case "$1" in
 	ip addr flush dev $interface
 	ip addr add ${ip}/${mask} dev $interface
 	[ -n "$router" ] && ip route add default via ${router%% *} dev $interface
-	# save pre-dhcp config files and generate new ones:
-	if [ "$interface" == "$PEERDNS_IF" ] ; then
-	    [ -f $RESOLV_CONF ] && mv -f $RESOLV_CONF ${RESOLV_CONF}.dhcsave
-	    [ -n "$domain" ] && echo search $domain > $RESOLV_CONF
-	    for i in $dns ; do
-		echo nameserver $i >> $RESOLV_CONF
-	    done
-	fi
-	if [ "$interface" == "$PEERNTP_IF" ] ; then
-	    [ -f $NTP_CONF ] && mv -f $NTP_CONF ${NTP_CONF}.dhcsave
-	    > $NTP_CONF
-	    for i in $ntpsrv; do
-		echo server $i >> $NTP_CONF
-	    done
-	fi
+	[ -n "$domain" ] && echo search $domain > $RESOLV_CONF
+	for i in $dns ; do
+	    echo nameserver $i >> $RESOLV_CONF
+	done
 	;;
     renew)
 	# compare new vs. previous config info:
@@ -77,18 +51,11 @@ case "$1" in
 	    ip addr add ${ip}/${mask} dev $interface
 	    [ -n "$router" ] && ip route add default via ${router%% *} dev $interface
 	fi
-	if [ -n "$REDO_DNS" -a "$interface" == "$PEERDNS_IF" ] ; then
+	if [ -n "$REDO_DNS"] ; then
 	    [ -n "$domain" ] && echo search $domain > $RESOLV_CONF
 	    for i in $dns ; do
 		echo nameserver $i >> $RESOLV_CONF
 	    done
-	fi
-	if [ -n "$REDO_NPT" -a "$interface" == "$PEERNTP_IF" ] ; then
-	    > $NTP_CONF
-	    for i in $ntpsrv ; do
-		echo server $i >> $NTP_CONF
-	    done
-	    # FIXME: RELOAD NTP DAEMON HERE
 	fi
 	;;
 esac
