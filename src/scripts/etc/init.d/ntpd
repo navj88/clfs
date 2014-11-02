@@ -1,26 +1,36 @@
 #!/bin/ash
+ 
 . /etc/init.d/functions
+NTP_BIN=/usr/sbin/ntpd
+NTP_CONF=/etc/ntpd.conf
 
-[ -x /usr/sbin/ntpd ] || exit 0
-[ -f /etc/ntpd.conf ] || exit 0
+[ -x $NTP_BIN ] || exit 1
+[ -f $NTP_CONF ] && . $NTP_CONF || exit 1
+
+check_network(){
+    ip route | grep "default" > /dev/null
+}
 
 case "$1" in
     start)
-	echo -n "Starting ntpd: "
-	start-stop-daemon -S -x /usr/sbin/ntpd
-	check_status
-	;;
+        echo -n "Starting ntpd: "
+        check_network
+        [ $? -ne 0 ] && echo "Network down" && exit 1
+        for i in $NTP_SERVERS ; do
+            PEERS="-p $i $PEERS"
+        done
+        "$NTP_BIN" -q $PEERS                                                                              check_status
+        ;;
     stop)
-	echo -n "Stopping ntpd: "
-	start-stop-daemon -K -x /usr/sbin/ntpd
-	check_status
-	;;
+        echo -n "Stopping ntpd: "
+        check_status
+        ;;
     restart)
-	"$0" stop
-	sleep 1
-	"$0" start
-	;;
+        "$0" stop
+        sleep 1
+        "$0" start
+        ;;
     *)
-	echo "Usage: $0 {start|stop|restart}"
-	;;
+        echo "Usage: $0 {start|stop|restart}"
+        ;;
 esac

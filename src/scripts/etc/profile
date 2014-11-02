@@ -13,4 +13,5 @@ export HISTSIZE=1000
 export HISTFILESIZE=1000
 export PAGER=/bin/more
 export EDITOR=/bin/vi
+export TZ=CST+6CDT,M4.1.0,M10.5.0
 # End /etc/profile
