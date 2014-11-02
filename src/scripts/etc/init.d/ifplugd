@@ -1,16 +1,14 @@
 #!/bin/ash
-CFG=/etc/ifplugd/ifplugd.conf
 IFPLUGD=/usr/sbin/ifplugd
+ACTION=/etc/ifplugd/ifplugd.action
+INTERFACES="eth0"
+ARGS="-fI -u2 -d2 -pq"
 [ -x $IFPLUGD ] || exit 0
-[ -f $CFG ] && . $CFG
-[ "x$INTERFACES" = "xauto" ] && INTERFACES="$(cat /proc/net/dev | awk '{ print $1 }' | egrep '^(eth|wlan)' | cut -d: -f1)"
 case "$1" in
     start)
 	echo -n "Starting ifplugd: "
 	for IF in $INTERFACES; do
-	    A="$(eval echo \$\{ARGS_${IF}\})"
-	    [ -z "$A" ] && A="$ARGS"
-	    $IFPLUGD -i $IF $A
+	    $IFPLUGD -r $ACTION -i $IF $ARGS
 	    echo -n " $IF"
 	done
 	echo

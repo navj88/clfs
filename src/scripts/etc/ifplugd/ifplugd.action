@@ -1,9 +1,10 @@
 #!/bin/ash
-set -e 
-if [ -z "$1" ] || [ -z "$2" ]; then
-    echo "Wrong arguments" > /dev/stderr
-    exit 1
-fi
-[ "$2" = "up" ] && exec /sbin/ifup $1
-[ "$2" = "down"] && exec /sbin/ifdown $1
-exit 1
+case "$2" in
+    up)
+	/sbin/ifup $1 && /etc/init.d/ntpd start
+	;;
+    down)
+        /sbin/ifdown $1
+        ;;
+esac
+exit 0
