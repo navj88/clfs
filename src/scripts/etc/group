@@ -15,4 +15,5 @@ video:x:12:
 utmp:x:13:
 usb:x:14:
 cdrom:x:15:
+nobody:x:65534:
 # End /etc/group
