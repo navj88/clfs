@@ -2,20 +2,16 @@
 . /etc/init.d/functions
 case "$1" in
 start)
-	echo -n "Starting syslogd : "
 	syslogd -s 0 -L
-	check_status
-	echo -n "Starting klogd   : "
+        check_status "Starting Syslogd"
 	klogd
-	check_status
+        check_status "Starting Klogd"
 	;;
 stop)
-	echo -n "Stopping klogd   : "
 	killall klogd
-	check_status
-	echo -n "Stopping syslogd : "
+        check_status "Stopping Klogd"
 	killall syslogd
-	check_status
+        check_status "Stopping Syslogd"
 	;;
 restart)
 	$0 stop
@@ -25,4 +21,3 @@ restart)
 	echo "Usage: $0 {start|stop|restart}"
 	exit 1
 esac
-# End /etc/init.d/syslog

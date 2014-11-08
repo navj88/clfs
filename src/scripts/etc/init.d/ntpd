@@ -1,29 +1,45 @@
 #!/bin/ash
- 
 . /etc/init.d/functions
 NTP_BIN=/usr/sbin/ntpd
 NTP_CONF=/etc/ntpd.conf
-
-[ -x $NTP_BIN ] || exit 1
-[ -f $NTP_CONF ] && . $NTP_CONF || exit 1
-
+LAST="2014.01.01-00:00:00"
+PEERS=""
+[ -x $NTP_BIN  ] || exit 1
+[ -f $NTP_CONF ] || exit 1
 check_network(){
     ip route | grep "default" > /dev/null
 }
-
+get_last(){
+    NEW_LAST=$(grep -E "^last" $NTP_CONF | cut -d" " -f2)
+    [ "$NEW_LAST" ] && LAST=$NEW_LAST
+}
+set_last(){
+    LAST=$(date -u +%Y.%m.%d-%H:%M:%S)
+    grep -E "^last" $NTP_CONF > /dev/null &&\
+    sed -i.old "s/^\(last\)\(.*\)/\1 $LAST/" $NTP_CONF ||\
+    echo "last $LAST" >> $NTP_CONF
+}
+get_peers(){
+    for peer in $(grep -E "^server" $NTP_CONF | cut -d" " -f2)
+    do
+	PEERS="$PEERS -p $peer"
+    done
+}
 case "$1" in
     start)
-        echo -n "Starting ntpd: "
-        check_network
-        [ $? -ne 0 ] && echo "Network down" && exit 1
-        for i in $NTP_SERVERS ; do
-            PEERS="-p $i $PEERS"
-        done
-        "$NTP_BIN" -q $PEERS                                                                              check_status
+	get_last
+        date --set $LAST > /dev/null
+        check_status "Setting up last date"
+	if check_network; then
+	    get_peers
+	    [ "$PEERS" ] && "$NTP_BIN" -q $PEERS || exit 1
+            check_status "Starting ntpd"
+	    set_last
+	fi
         ;;
     stop)
-        echo -n "Stopping ntpd: "
-        check_status
+        set_last
+        check_status "Saving last date"
         ;;
     restart)
         "$0" stop

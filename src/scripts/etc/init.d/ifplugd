@@ -1,4 +1,5 @@
 #!/bin/ash
+. /etc/init.d/functions
 IFPLUGD=/usr/sbin/ifplugd
 ACTION=/etc/ifplugd/ifplugd.action
 INTERFACES="eth0"
@@ -6,20 +7,22 @@ ARGS="-fI -u2 -d2 -pq"
 [ -x $IFPLUGD ] || exit 0
 case "$1" in
     start)
-	echo -n "Starting ifplugd: "
 	for IF in $INTERFACES; do
 	    $IFPLUGD -r $ACTION -i $IF $ARGS
-	    echo -n " $IF"
+	    check_status "Starting ifplugd on $IF"
 	done
-	echo
 	;;
     stop)
-	echo -n "Shutting down ifplugd: "
-	killall ifplugd
+	for IF in $INTERFACES; do
+            PIDFILE="/var/run/ifplugd.$IF.pid"
+            [ -f $PIDFILE ] && \
+		start-stop-daemon -K -q -p $PIDFILE 
+            check_status "Shutting down ifplugd on $IF"
+        done
 	;;
     restart)
-	$0 stop $INTERFACES
-	$0 start $INTERFACES
+	$0 stop
+	$0 start
 	;;
     *)
 	echo "Usage: $0 {start|stop|restart}"

@@ -1,11 +1,12 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 check_status(){
     local ERR=$?
-    echo -en "\\033[65G"
+    echo -n "["
     if [ $ERR = 0 ]; then
-	echo -en "\\033[1;32mOK"
+        echo -en "\\033[1;32m OK "
     else
-	echo -en "\\033[1;31mFAIL"
+        echo -en "\\033[1;31mFAIL"
     fi
-    echo -e "\\033[0;39m"
+    echo -en "\\033[0;39m]\t"
+    echo $1
 }

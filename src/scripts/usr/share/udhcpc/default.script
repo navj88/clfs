@@ -5,6 +5,7 @@
 
 # where to save config information for $interface:
 CFG="/var/run/udhcpc.${interface}.cfg"
+RESOLV_CONF="/etc/resolv.conf"
 
 case "$1" in
     defconfig)

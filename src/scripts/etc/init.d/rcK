@@ -1,15 +1,13 @@
 #!/bin/ash
 . /etc/init.d/functions
 echo -e "\nSystem is going down for reboot or halt now.\n"
-echo "Starting stop scripts."
-for i in /etc/init.d/stop/K*
+for i in $(ls -r /etc/init.d/start/S??*)
 do
     if [ -x $i ]; then
 	$i stop
     fi
 done
-echo -n "Syncing all filesystems    : "
 sync
-check_status
-echo -n "Unmounting all filesystems : "
+check_status "Syncing all filesystems"
 umount -a -r
+check_status "Unmounting all filesystems"

@@ -1,10 +1,6 @@
-# Begin /etc/fstab
 # FileSystem	MountPoint	Type	Options		Dump Fsck
 /dev/mmcblk0p1	/boot		vfat	defaults	1	2
 /dev/mmcblk0p2	/		ext4	defaults	0	1
-/dev/mmcblk0p3	none		swap	sw		0	0
 tmpfs /tmp      tmpfs defaults,noatime,nosuid,size=30m            0 0
-tmpfs /var/run  tmpfs nodev,nosuid                                0 0
 tmpfs /var/log  tmpfs defaults,noatime,nosuid,mode=0755,size=100m 0 0
 tmpfs /var/run  tmpfs defaults,noatime,nosuid,mode=0755,size=2m   0 0
-# End /etc/fstab
