@@ -271,6 +271,8 @@ endif
 	@touch $@
 .install-kernel : .install-dir .install-config-kernel .install-busybox
 	$(CROSS-VARS)
+	-cd $(CLFS_SRC)/linux && \
+	patch -Np1 -i ../dm9601-bug.patch
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
 	CROSS_COMPILE=$(CLFS_TARGET)-  -j$(JOBS)
 	$(MAKE) -C $(CLFS_SRC)/linux ARCH=$(CLFS_ARCH) \
@@ -328,4 +330,6 @@ clean-src-busybox :
 clean-src-iana :
 	rm -Rf $(CLFS_SRC)/iana-etc-2.30
 clean-src-kernel :
-	cd $(CLFS_SRC)/linux && git clean -Xf
+	cd $(CLFS_SRC)/linux && \
+	git clean -Xf && \
+	git checkout -- .
