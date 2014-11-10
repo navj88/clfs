@@ -1,0 +1,28 @@
+#!/bin/ash
+. /etc/init.d/functions
+OPENVPN=/usr/sbin/openvpn
+CONF_FILE=/etc/openvpn/client.conf
+PIDFILE=/var/run/openvpn.pid
+
+[ -x $IFPLUGD ] || exit 1
+case "$1" in
+    start)
+	modprobe tun
+	[ ! -f $PIDFILE ] && \
+	    $OPENVPN --writepid $PIDFILE --daemon --config $CONF_FILE
+	check_status "Starting openvpn"
+	;;
+    stop)
+        [ -f $PIDFILE ] && \
+	    start-stop-daemon -K -q -p $PIDFILE 
+	check_status "Stoping openvpn"
+	;;
+    restart)
+	$0 stop
+	$0 start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1 
+esac
+exit 0
