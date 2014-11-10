@@ -29,7 +29,7 @@ CROSS-VARS = \
 
 KERNEL_CONFIG =
 BUSYBOX_CONFIG =
-
+DESTDIR=$(CLFS)/sd
 export
 print-var : 
 	@$(foreach V,$(sort $(.VARIABLES)), \
@@ -317,12 +317,19 @@ extra : .install-openvpn .install-iptables
 ############################################################
 # Rutinas Finales ##########################################
 ############################################################
-.PHONY: system
+.PHONY: system install
 system : base extra .install-lib
 .install-lib : .install-dir .build-gcc-final
 	$(CROSS_VARS)
 	-@cp -vP $(CLFS_CTOOLS_TG)/lib/*.so* $(CLFS_FS)/lib
 	@touch $@
+install:
+	rsync \
+	  -rlptu \
+	  --chown=root:root \
+	  --exclude 'doc' \
+	  --exclude '*man' \
+	$(CLFS_FS)/ $(DESTDIR)/
 
 ############################################################
 # Rutinas de Limpieza ######################################
