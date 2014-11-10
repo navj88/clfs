@@ -1,0 +1,24 @@
+#!/bin/ash
+. /etc/init.d/functions
+IPTABLES=/usr/sbin/iptables
+IPTABLES_CONF=/etc/iptables.save
+case "$1" in
+    start)
+	${IPTABLES}-restore < $IPTABLES_CONF
+	check_status "Setting up iptables"
+	;;
+    stop)
+	$IPTABLES -t filter --flush && \
+	$IPTABLES -t nat --flush && \
+	$IPTABLES -t mangle --flush
+	check_status "Flushing iptables rules"
+	;;
+    restart|reload)
+	$0 stop
+	$0 start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+exit 0

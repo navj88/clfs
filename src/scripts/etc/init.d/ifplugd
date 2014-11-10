@@ -1,10 +1,10 @@
 #!/bin/ash
 . /etc/init.d/functions
 IFPLUGD=/usr/sbin/ifplugd
-ACTION=/etc/ifplugd/ifplugd.action
-INTERFACES="eth0"
-ARGS="-fI -u2 -d2 -pq"
-[ -x $IFPLUGD ] || exit 0
+ACTION=/etc/ifplugd.action
+INTERFACES="eth0 eth1"
+ARGS="-fMI -u2 -d2"
+[ -x $IFPLUGD ] || exit 1
 case "$1" in
     start)
 	for IF in $INTERFACES; do

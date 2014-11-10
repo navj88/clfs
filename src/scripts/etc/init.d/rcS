@@ -3,10 +3,13 @@
 
 mount -n -t proc proc /proc
 check_status "Mounting /proc"
-echo 3 > /proc/sys/kernel/printk
 
 mount -n -t sysfs sysfs /sys
 check_status "Mounting /sys"
+
+echo 3 > /proc/sys/kernel/printk && \
+echo 1 > /proc/sys/net/ipv4/ip_forward
+check_status "Setting Sysconf"
 
 mount -o remount,rw /
 check_status "Remounting Root RW"

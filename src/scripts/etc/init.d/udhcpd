@@ -1,0 +1,23 @@
+#!/bin/ash
+. /etc/init.d/functions
+UDHCPD=/usr/sbin/udhcpd
+PIDFILE=/var/run/udhcpd.pid
+[ -x $UDHCPD ] || exit 1
+case "$1" in
+    start)
+	[ ! -f $PIDFILE ] && $UDHCPD -S
+	check_status "Starting udhcpd"
+	;;
+    stop)
+	[ -f $PIDFILE ] && start-stop-daemon -K -q -p $PIDFILE
+	check_status "Stoping udhcpd"
+	;;
+    restart)
+	$0 stop
+	$0 start
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+exit 0
