@@ -48,10 +48,10 @@ set-cross-env :
 	@echo -e "$(BASHRC)" "$(BASHRC_CROSS)" | sed -e 's/^[ ]//' > ~/.bashrc
 
 ############################################################
-# Cross Compile Tools ######################################
+# Compilador Cruzado  ######################################
 ############################################################
 .PHONY: cross-tools
-cross-tools: .build-gcc-final .build-lzo .build-zlib .build-openssl
+cross-tools: .build-gcc-final
 
 .build-dir:
 	@mkdir -pv $(CLFS_CTOOLS_TG)
@@ -159,47 +159,13 @@ cross-tools: .build-gcc-final .build-lzo .build-zlib .build-openssl
 	$(MAKE) -C $(CLFS_SRC)/gcc-build install
 	rm -Rf $(CLFS_SRC)/gcc-{build,4.7.3}
 	@touch $@
-.build-lzo : .build-gcc-final
-	$(CROSS-VARS)
-	@cd $(CLFS_SRC) && tar xzf lzo-2.08.tar.gz
-	cd $(CLFS_SRC)/lzo-2.08 && \
-	./configure \
-	  --host=$(CLFS_TARGET) \
-	  --prefix=$(CLFS_CTOOLS_TG) \
-	  --enable-shared
-	$(MAKE) -C $(CLFS_SRC)/lzo-2.08 -j$(JOBS)
-	$(MAKE) -C $(CLFS_SRC)/lzo-2.08 install
-	@rm -Rf $(CLFS_SRC)/lzo-2.08
-	@touch $@
-.build-zlib : .build-gcc-final
-	$(CROSS-VARS)
-	@cd $(CLFS_SRC) && tar xzf zlib-1.2.8.tar.gz
-	cd $(CLFS_SRC)/zlib-1.2.8 && \
-	CFLAGS=-Os ./configure \
-	  --shared
-	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 -j$(JOBS)
-	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 prefix=$(CLFS_CTOOLS_TG) install
-	@rm -Rf $(CLFS_SRC)/zlib-1.2.8
-	@touch $@
-.build-openssl : .build-gcc-final
-	$(CROSS-VARS)
-	@cd $(CLFS_SRC) && tar xzf openssl-1.0.1j.tar.gz
-	cd $(CLFS_SRC)/openssl-1.0.1j $$ \
-	patch -Np1 -i ../openssl-001-do-not-build-docs.patch && \
-	patch -Np1 -i ../openssl-004-musl-termios.patch && \
-	./Configure linux-armv4 shared zlib-dynamic --prefix=/usr
-	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j
-	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j INSTALL_PREFIX=$(CLFS_CTOOLS_TG) install
-	@rm -Rf $(CLFS_SRC)/openssl-1.0.1j
-	@touch $@
 
 ############################################################
-
-# Installing Basic System ##################################
+# Sistema Base #############################################
 ############################################################
-.PHONY: system
+.PHONY: base
 system: cross-tools .install-busybox .install-iana-etc .install-kernel \
-	.install-bootscripts .install-boot .install-lib .install-openvpn \
+	.install-bootscripts .install-boot .install-lib \
 	.install-config-kernel 
 .install-dir :
 	@mkdir -pv $(CLFS_FS)/{bin,boot,dev,\
@@ -241,22 +207,6 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel \
 	$(MAKE) -C $(CLFS_SRC)/iana-etc-2.30 DESTDIR=$(CLFS_FS) install
 	rm -Rf $(CLFS_SRC)/iana-etc-2.30
 	@touch $@
-.install-openvpn : .install-dir .build-lzo .build-openssl .build-zlib
-	$(CROSS-VARS)
-	cd $(CLFS_SRC) && tar xzf openvpn-2.3.5.tar.gz
-	cd $(CLFS_SRC)/openvpn-2.3.5 && \
-	./configure \
-	  --host=$(CLFS_TARGET) \
-	  --prefix=/usr \
-	  --disable-snappy \
-	  --enable-shared \
-	  --disable-plugins \
-	  --disable-debug \
-	  --enable-iproute2
-	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 -j$(JOBS)
-	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 DESTDIR=$(CLFS_FS) install
-	rm -Rf $(CLFS_SRC)/openvpn-2.3.5
-	@touch $@
 .install-config-kernel:
 	$(CROSS-VARS)
 	$(MAKE) -C $(CLFS_SRC)/linux mrproper
@@ -289,46 +239,94 @@ endif
 	$(CROSS-VARS)
 	@cp -purv $(CLFS_SRC)/scripts/* $(CLFS_FS)
 	@touch $@
-.install-lib: .install-dir
+
+############################################################
+# Programas y Bibliotecas Adicionales ######################
+############################################################
+.PHONY: extra
+extra : .install-openvpn
+
+.build-lzo : .build-gcc-final
+	$(CROSS-VARS)
+	@cd $(CLFS_SRC) && tar xzf lzo-2.08.tar.gz
+	cd $(CLFS_SRC)/lzo-2.08 && \
+	./configure \
+	  --host=$(CLFS_TARGET) \
+	  --prefix=$(CLFS_CTOOLS_TG) \
+	  --enable-shared
+	$(MAKE) -C $(CLFS_SRC)/lzo-2.08 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/lzo-2.08 install
+	@rm -Rf $(CLFS_SRC)/lzo-2.08
+	@touch $@
+.build-zlib : .build-gcc-final
+	$(CROSS-VARS)
+	@cd $(CLFS_SRC) && tar xzf zlib-1.2.8.tar.gz
+	cd $(CLFS_SRC)/zlib-1.2.8 && \
+	CFLAGS=-Os ./configure \
+	  --shared
+	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/zlib-1.2.8 prefix=$(CLFS_CTOOLS_TG) install
+	@rm -Rf $(CLFS_SRC)/zlib-1.2.8
+	@touch $@
+.build-openssl : .build-gcc-final
+	$(CROSS-VARS)
+	@cd $(CLFS_SRC) && tar xzf openssl-1.0.1j.tar.gz
+	cd $(CLFS_SRC)/openssl-1.0.1j $$ \
+	patch -Np1 -i ../openssl-001-do-not-build-docs.patch && \
+	patch -Np1 -i ../openssl-004-musl-termios.patch && \
+	./Configure linux-armv4 shared zlib-dynamic --prefix=/usr
+	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j
+	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j INSTALL_PREFIX=$(CLFS_CTOOLS_TG) install
+	@rm -Rf $(CLFS_SRC)/openssl-1.0.1j
+	@touch $@
+.install-openvpn : .install-dir .build-lzo .build-openssl .build-zlib
+	$(CROSS-VARS)
+	cd $(CLFS_SRC) && tar xzf openvpn-2.3.5.tar.gz
+	cd $(CLFS_SRC)/openvpn-2.3.5 && \
+	./configure \
+	  --host=$(CLFS_TARGET) \
+	  --prefix=/usr \
+	  --disable-snappy \
+	  --enable-shared \
+	  --disable-plugins \
+	  --disable-debug \
+	  --enable-iproute2
+	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 DESTDIR=$(CLFS_FS) install
+	rm -Rf $(CLFS_SRC)/openvpn-2.3.5
+	@touch $@
+
+############################################################
+# Rutinas Finales ##########################################
+############################################################
+.PHONY: system
+system : base extra .install-lib
+.install-lib : .install-dir .build-gcc-final
 	$(CROSS_VARS)
 	-@cp -vP $(CLFS_CTOOLS_TG)/lib/*.so* $(CLFS_FS)/lib
-	-$(STRIP) $(CLFS)/targetfs/lib/*
 	@touch $@
+
 ############################################################
-
-# Installing Final System ##################################
+# Rutinas de Limpieza ######################################
 ############################################################
-.final:
-	@chown -Rv root:root $(CLFS_FS)
-
-
-
+.PHONY: clean-all clean-env clean-ctools clean-fs clean-src
 clean-all : clean-ctools clean-fs clean-src
-
 clean-env :
 	rm -f ~/.bash*
-clean-ctools:
+clean-ctools :
 	rm -Rf $(CLFS_CTOOLS)
 	rm -f $(CLFS)/.buil*
 clean-fs :
 	rm -Rf $(CLFS_FS)
 	rm -f $(CLFS)/.install*
-clean-src : clean-src-binutils clean-src-gcc clean-src-musl clean-src-busybox\
-	clean-src-iana clean-src-kernel
-
-clean-src-binutils :
+clean-src :
 	rm -Rf $(CLFS_SRC)/binutils-2.24
 	rm -Rf $(CLFS_SRC)/binutils-build
-clean-src-gcc :
 	rm -Rf $(CLFS_SRC)/gcc-4.7.3
 	rm -Rf $(CLFS_SRC)/gcc-build
-clean-src-musl :
 	rm -Rf $(CLFS_SRC)/musl-1.0.3
-clean-src-busybox :
 	rm -Rf $(CLFS_SRC)/busybox-1.22.1
-clean-src-iana :
 	rm -Rf $(CLFS_SRC)/iana-etc-2.30
-clean-src-kernel :
 	cd $(CLFS_SRC)/linux && \
 	git clean -Xf && \
 	git checkout -- .
