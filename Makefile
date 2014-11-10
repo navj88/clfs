@@ -288,9 +288,9 @@ extra : .install-openvpn
 	cd $(CLFS_SRC) && tar xzf openvpn-2.3.5.tar.gz
 	cd $(CLFS_SRC)/openvpn-2.3.5 && \
 	./configure \
+	  IPROUTE=/sbin/ip \
 	  --host=$(CLFS_TARGET) \
 	  --prefix=/usr \
-	  --disable-snappy \
 	  --enable-shared \
 	  --disable-plugins \
 	  --disable-debug \
