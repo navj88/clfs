@@ -1,10 +1,7 @@
-.PHONY: clean-all clean-vars clean-ctools clean-fs clean-src clean-src-binutils \
-	clean-src-gcc clean-src-musl clean-src-busybox clean-src-iana clean-src-kernel \
-	print-var set-env cross-vars
-
 ############################################################
 # Variables de entorno #####################################
 ############################################################
+.PHONY: print-var
 JOBS:=9
 CLFS_NAME:=rpi
 CLFS_FLOAT:=hard
@@ -43,14 +40,18 @@ print-var :
 ############################################################
 # Configuracion del entorno ################################
 ############################################################
+.PHONY: set-env set-cross-env
 set-env :
 	@echo -e "$(BASH_PROFILE)" | sed -e 's/^[ ]//' > ~/.bash_profile
 	@echo -e "$(BASHRC)" | sed -e 's/^[ ]//' > ~/.bashrc
+set-cross-env :
+	@echo -e "$(BASHRC)" "$(BASHRC_CROSS)" | sed -e 's/^[ ]//' > ~/.bashrc
+
 ############################################################
 # Cross Compile Tools ######################################
 ############################################################
 .PHONY: cross-tools
-cross-tools: .build-gcc-final .build-vars .build-lzo .build-zlib .build-openssl
+cross-tools: .build-gcc-final .build-lzo .build-zlib .build-openssl
 
 .build-dir:
 	@mkdir -pv $(CLFS_CTOOLS_TG)
@@ -191,9 +192,7 @@ cross-tools: .build-gcc-final .build-vars .build-lzo .build-zlib .build-openssl
 	$(MAKE) -C $(CLFS_SRC)/openssl-1.0.1j INSTALL_PREFIX=$(CLFS_CTOOLS_TG) install
 	@rm -Rf $(CLFS_SRC)/openssl-1.0.1j
 	@touch $@
-.build-vars :
-	@echo -e "$(BASHRC)" "$(BASHRC_CROSS)" | sed -e 's/^[ ]//' > ~/.bashrc
-	@touch $@
+
 ############################################################
 
 # Installing Basic System ##################################
