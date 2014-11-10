@@ -248,7 +248,7 @@ endif
 # Programas y Bibliotecas Adicionales ######################
 ############################################################
 .PHONY: extra
-extra : .install-openvpn
+extra : .install-openvpn .install-iptables
 
 .build-lzo : .build-gcc-final
 	$(CROSS-VARS)
@@ -298,6 +298,20 @@ extra : .install-openvpn
 	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 -j$(JOBS)
 	$(MAKE) -C $(CLFS_SRC)/openvpn-2.3.5 DESTDIR=$(CLFS_FS) install
 	rm -Rf $(CLFS_SRC)/openvpn-2.3.5
+	@touch $@
+.install-iptables : .install-dir
+	$(CROSS-VARS)
+	cd $(CLFS_SRC) && tar xjf iptables-1.4.21.tar.bz2
+	cd $(CLFS_SRC)/iptables-1.4.21 && \
+	patch -Np1 -i ../iptables-1.4.14-musl-fixes.patch && \
+	./configure \
+	  --host=$(CLFS_ARCH) \
+	  --prefix=/usr \
+	  --disable-ipv6 \
+	  --disable-largefile
+	$(MAKE) -C $(CLFS_SRC)/iptables-1.4.21 -j$(JOBS)
+	$(MAKE) -C $(CLFS_SRC)/iptables-1.4.21 DESTDIR=$(CLFS_FS) install
+	rm -Rf $(CLFS_SRC)/iptables-1.4.21
 	@touch $@
 
 ############################################################
