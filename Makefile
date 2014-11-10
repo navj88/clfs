@@ -39,7 +39,7 @@ print-var :
 			$(warning $V=$($V) ($(value $V)))\
 		)\
 	)
-include file-config.mk
+
 ############################################################
 # Configuracion del entorno ################################
 ############################################################
@@ -283,7 +283,6 @@ endif
 	./imagetool-uncompressed.py $(CLFS_SRC)/linux/arch/arm/boot/zImage &&\
 	mv -vf kernel.img $(CLFS_FS)/boot
 	@cp -vf $(CLFS_SRC)/firmware/boot/{bootcode.bin,fixup.dat,start.elf} $(CLFS_FS)/boot
-	@echo -e "$(CMDLINE)" | sed -e 's/^[ ]//' > $(CLFS_FS)/boot/cmdline.txt
 	@touch $@
 .install-bootscripts: .install-dir
 	$(CROSS-VARS)
