@@ -28,6 +28,7 @@ CROSS-VARS = \
 	$(eval STRIP:=$(CLFS_TARGET)-strip)
 
 KERNEL_CONFIG =
+BUSYBOX_CONFIG =
 
 export
 print-var : 
@@ -189,6 +190,9 @@ system: cross-tools .install-busybox .install-iana-etc .install-kernel \
 	$(CLFS_SRC)/busybox-1.22.1/.config
 	sed -i 's/\(CONFIG_FEATURE_HAVE_RPC\)=y/# \1 is not set/' \
 	$(CLFS_SRC)/busybox-1.22.1/.config
+ifdef BUSYBOX_CONFIG
+	$(MAKE) -C $(CLFS_SRC)/busybox-1.22.1 ARCH=$(CLFS_ARCH) menuconfig
+endif
 	$(MAKE) -j$(JOBS) -C $(CLFS_SRC)/busybox-1.22.1 ARCH=$(CLFS_ARCH) \
 	CROSS_COMPILE=$(CLFS_TARGET)- 
 	$(MAKE) -C $(CLFS_SRC)/busybox-1.22.1 ARCH=$(CLFS_ARCH) \
