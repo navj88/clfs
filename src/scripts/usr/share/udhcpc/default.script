@@ -1,24 +1,17 @@
 #!/bin/ash
-# udhcp sample script by Gabriel Somlo (somlo at cmu edu)
-
 [ -z "$1" ] && echo 'Error: should be called from udhcpc' && exit 1
 
-# where to save config information for $interface:
 CFG="/var/run/udhcpc.${interface}.cfg"
 RESOLV_CONF="/etc/resolv.conf"
 
 case "$1" in
     defconfig)
-	# bring interfaces up, but with no IP configured:
 	ip addr flush dev $interface
 	ip link set $interface up
-	# remove any stored config info for this $interface:
 	rm -f $CFG
 	;;
     bound)
-	# save config info for $interface:
 	set > $CFG
-	# configure interface and routes:
 	ip addr flush dev $interface
 	ip addr add ${ip}/${mask} dev $interface
 	[ -n "$router" ] && ip route add default via ${router%% *} dev $interface
@@ -28,7 +21,6 @@ case "$1" in
 	done
 	;;
     renew)
-	# compare new vs. previous config info:
 	set > ${CFG}.new
 	for i in $(diff -U1 $CFG ${CFG}.new | grep -E ^[+-] \
 	    | tail +3 | awk -F[+-=] '{print $2}') ; do
@@ -44,9 +36,7 @@ case "$1" in
 		    ;;
 		esac
 	done
-	# save new config info:
 	mv -f ${CFG}.new $CFG
-	# make only necessary changes as per config comparison:
 	if [ -n "$REDO_NET" ] ; then
 	    ip addr flush dev $interface
 	    ip addr add ${ip}/${mask} dev $interface
