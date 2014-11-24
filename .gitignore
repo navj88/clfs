@@ -3,3 +3,4 @@
 !.gitignore
 targetfs/
 cross-tools/
+src/scripts/etc/openvpn/certs/*

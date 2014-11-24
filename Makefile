@@ -354,4 +354,5 @@ clean-src :
 	rm -Rf $(CLFS_SRC)/iana-etc-2.30
 	cd $(CLFS_SRC)/linux && \
 	git clean -Xf && \
+	git clean -xf && \
 	git checkout -- .
