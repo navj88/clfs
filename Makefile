@@ -31,12 +31,37 @@ KERNEL_CONFIG =
 BUSYBOX_CONFIG =
 DESTDIR=$(CLFS)/sd
 export
+
+############################################################
+# Herramientas Varias ######################################
+############################################################
 print-var : 
 	@$(foreach V,$(sort $(.VARIABLES)), \
 		$(if $(filter-out environment% default automatic,$(origin $V)),\
 			$(warning $V=$($V) ($(value $V)))\
 		)\
 	)
+
+version-check :
+	@bash --version | head -n1 | cut -d" " -f2-4
+	@echo -n "binutils, "; ld --version | head -n1 | cut -d" " -f3-
+	@bzip2 --version 2>&1 < /dev/null | head -n1 | cut -d" " -f1,6-
+	@echo -n "coreutils, "; chown --version | head -n1 | cut -d")" -f2
+	@diff --version | head -n1
+	@find --version | head -n1
+	@gawk --version | head -n1
+	@gcc  --version | head -n1
+	@ldd $(shell which $(SHELL))| grep libc.so | cut -d" " -f3 |\
+	$(SHELL)| head -n1 | cut -d" " -f1-9
+	@grep --version | head -n1
+	@gzip --version | head -n1
+	@make --version | head -n1
+	@patch --version | head -n1
+	@sed   --version | head -n1
+	@sudo  -V | head -n1
+	@tar  --version | head -n1
+	@makeinfo --version | head -n1
+	@rsync --version | head -n1 | cut -d" " -f1-4
 
 ############################################################
 # Configuracion del entorno ################################
@@ -165,9 +190,8 @@ cross-tools: .build-gcc-final
 # Sistema Base #############################################
 ############################################################
 .PHONY: base
-system: cross-tools .install-busybox .install-iana-etc .install-kernel \
-	.install-bootscripts .install-boot .install-lib \
-	.install-config-kernel 
+base :  cross-tools .install-busybox .install-iana-etc .install-kernel \
+	.install-boot .install-config-kernel 
 .install-dir :
 	@mkdir -pv $(CLFS_FS)/{bin,boot,dev,\
 	etc/network/if-{post-{up,down},pre-{up,down},up,down}.d,home,\
@@ -238,10 +262,6 @@ endif
 	./imagetool-uncompressed.py $(CLFS_SRC)/linux/arch/arm/boot/zImage &&\
 	mv -vf kernel.img $(CLFS_FS)/boot
 	@cp -vf $(CLFS_SRC)/firmware/boot/{bootcode.bin,fixup.dat,start.elf} $(CLFS_FS)/boot
-	@touch $@
-.install-bootscripts: .install-dir
-	$(CROSS-VARS)
-	@cp -purv $(CLFS_SRC)/scripts/* $(CLFS_FS)
 	@touch $@
 
 ############################################################
@@ -318,10 +338,14 @@ extra : .install-openvpn .install-iptables
 # Rutinas Finales ##########################################
 ############################################################
 .PHONY: system install
-system : base extra .install-lib
+system : base extra .install-lib .install-bootscripts
 .install-lib : .install-dir .build-gcc-final
 	$(CROSS_VARS)
 	-@cp -vP $(CLFS_CTOOLS_TG)/lib/*.so* $(CLFS_FS)/lib
+	@touch $@
+.install-bootscripts: .install-dir
+	$(CROSS-VARS)
+	@cp -purv $(CLFS_SRC)/scripts/* $(CLFS_FS)
 	@touch $@
 install:
 	rsync \
