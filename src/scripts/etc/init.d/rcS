@@ -61,6 +61,7 @@ check_status "Setting up interface lo"
 loadkmap < /etc/la-latin1.key
 check_status "Loading Keyboard Map"
 
+modprobe tun
 sleep 2
 for i in $(ls /etc/init.d/start/S??*)
 do

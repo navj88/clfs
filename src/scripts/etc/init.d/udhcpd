@@ -1,10 +1,13 @@
 #!/bin/ash
 . /etc/init.d/functions
 UDHCPD=/usr/sbin/udhcpd
+UDHCPD_CONF=/etc/udhcpd.conf
 PIDFILE=/var/run/udhcpd.pid
+NS=$(grep -E "^nameserver" /etc/resolv.conf | head -n 1 | cut -d" " -f2)
 [ -x $UDHCPD ] || exit 1
 case "$1" in
     start)
+	[ $NS ] && sed -i.old "s/^\(option dns\)\(.*\)/\1 $NS /g" $UDHCPD_CONF
 	[ ! -f $PIDFILE ] && $UDHCPD -S
 	check_status "Starting udhcpd"
 	;;

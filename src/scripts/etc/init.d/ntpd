@@ -32,7 +32,7 @@ case "$1" in
         check_status "Setting up last date"
 	if check_network; then
 	    get_peers
-	    [ "$PEERS" ] && "$NTP_BIN" -q $PEERS || exit 1
+	    [ "$PEERS" ] && "$NTP_BIN" -q $PEERS
             check_status "Starting ntpd"
 	    set_last
 	fi

@@ -2,27 +2,26 @@
 
 IFUP=/sbin/ifup
 IFDOWN=/sbin/ifdown
-
 NTPD=/etc/init.d/ntpd
-
-UDHCPD=/usr/sbin/udhcpd
-UDHCPD_PID=/var/run/udhcpd.pid
-
-OPENVPN=/usr/sbin/openvpn
+UDHCPD=/etc/init.d/udhcpd
+OPENVPN=/etc/init.d/openvpn
 
 case "$2" in
     up)
         if   [ "$1" = "eth0" ] ; then
             $IFUP $1 &&	$NTPD start
+	    $OPENVPN start
         elif [ "$1" = "eth1" ] ; then
-            $UDHCPD -S
+            $UDHCPD start
         fi
         ;;
     down)
         if   [ "$1" = "eth0" ] ; then
-            $IFDOWN $1 && $NTPD stop
+            $IFDOWN $1
+	    $NTPD stop
+	    $OPENVPN stop
         elif [ "$1" = "eth1" ] ; then
-            start-stop-daemon -K -q -p $UDHCPD_PID
+	    $UDHCPD stop
         fi
         ;;
 esac
