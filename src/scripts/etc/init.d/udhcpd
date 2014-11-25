@@ -3,11 +3,15 @@
 UDHCPD=/usr/sbin/udhcpd
 UDHCPD_CONF=/etc/udhcpd.conf
 PIDFILE=/var/run/udhcpd.pid
+LEASES_DIR=/var/lib/misc
+LEASES_FILE=udhcpd.leases
+LEASES_PATH="${LEASES_DIR}/${LEASES_FILE}"
 NS=$(grep -E "^nameserver" /etc/resolv.conf | head -n 1 | cut -d" " -f2)
 [ -x $UDHCPD ] || exit 1
 case "$1" in
     start)
 	[ $NS ] && sed -i.old "s/^\(option dns\)\(.*\)/\1 $NS /g" $UDHCPD_CONF
+	[ ! -f $LEASES_PATH ] && mkdir -p $LEASES_DIR && touch $LEASES_FILE
 	[ ! -f $PIDFILE ] && $UDHCPD -S
 	check_status "Starting udhcpd"
 	;;
