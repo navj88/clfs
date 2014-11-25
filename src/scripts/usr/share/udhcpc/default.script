@@ -34,7 +34,7 @@ case "$1" in
 		ntpsrv)
 		    REDO_NTP='yes'
 		    ;;
-		esac
+	    esac
 	done
 	mv -f ${CFG}.new $CFG
 	if [ -n "$REDO_NET" ] ; then
