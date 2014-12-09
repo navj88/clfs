@@ -9,14 +9,12 @@ CLFS_HOST:=$(shell echo $$MACHTYPE | sed 's/-[^-]*/-cross/')
 CLFS_TARGET:=arm-linux-musleabihf
 CLFS_ARCH:=arm
 CLFS_ARM_ARCH:=armv6
-
 CLFS:=$(shell pwd)
 CLFS_SRC:=$(CLFS)/src
 CLFS_CTOOLS:=$(CLFS)/cross-tools
 CLFS_CTOOLS_TG:=$(CLFS_CTOOLS)/$(CLFS_TARGET)
 CLFS_FS:=$(CLFS)/targetfs
 PATH:=$(CLFS_CTOOLS)/bin:/bin/:/usr/bin
-
 CROSS-VARS = \
 	$(eval CC:=$(CLFS_TARGET)-gcc) \
 	$(eval AR:=$(CLFS_TARGET)-ar) \
@@ -25,7 +23,6 @@ CROSS-VARS = \
 	$(eval RANLIB:=$(CLFS_TARGET)-ranlib) \
 	$(eval READELF:=$(CLFS_TARGET)-readelf) \
 	$(eval STRIP:=$(CLFS_TARGET)-strip)
-
 KERNEL_CONFIG =
 BUSYBOX_CONFIG =
 export
