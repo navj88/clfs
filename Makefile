@@ -58,37 +58,37 @@ CLEAN_TARBALLS:=$(foreach V, $(TARBALLS), $(CLFS_SRC)/$($(V)_BASE).clean)
 CLEAN_GITREPOS:=$(foreach V, $(GITREPOS), $(CLFS_SRC)/$($(V)_BASE).clean)
 get-src: $(SOURCES)
 $(BINUTILS_SRC) :
-	@wget -P $(CLFS_SRC) http://ftp.gnu.org/gnu/binutils/$(BINUTILS)
+	@wget -q -P $(CLFS_SRC) http://ftp.gnu.org/gnu/binutils/$(BINUTILS)
 $(BUSYBOX_SRC) :
-	@wget -P $(CLFS_SRC) http://busybox.net/downloads/$(BUSYBOX)
+	@wget -q -P $(CLFS_SRC) http://busybox.net/downloads/$(BUSYBOX)
 $(FIRMWARE_SRC) :
 	@git clone --depth 1 https://github.com/raspberrypi/$(FIRMWARE) $(FIRMWARE_SRC)
 $(GCC_SRC) :
-	@wget -P $(CLFS_SRC) http://ftp.gnu.org/gnu/gcc/$(GCC_BASE)/$(GCC)
+	@wget -q -P $(CLFS_SRC) http://ftp.gnu.org/gnu/gcc/$(GCC_BASE)/$(GCC)
 $(GMP_SRC) :
-	@wget -P $(CLFS_SRC) http://ftp.gnu.org/gnu/gmp/$(GMP)
+	@wget -q -P $(CLFS_SRC) http://ftp.gnu.org/gnu/gmp/$(GMP)
 $(IANA_SRC) :
-	@wget -P $(CLFS_SRC) http://sethwklein.net/$(IANA)
+	@wget -q -P $(CLFS_SRC) http://sethwklein.net/$(IANA)
 $(IPTABLES_SRC) :
-	@wget -P $(CLFS_SRC) http://www.netfilter.org/projects/iptables/files/$(IPTABLES)
+	@wget -q -P $(CLFS_SRC) http://www.netfilter.org/projects/iptables/files/$(IPTABLES)
 $(LINUX_SRC) :
 	@git clone --depth 1 https://github.com/raspberrypi/$(LINUX) $(LINUX_SRC)
 $(LZO_SRC) :
-	@wget -P $(CLFS_SRC) http://www.oberhumer.com/opensource/lzo/download/$(LZO)
+	@wget -q -P $(CLFS_SRC) http://www.oberhumer.com/opensource/lzo/download/$(LZO)
 $(MPC_SRC) :
-	@wget -P $(CLFS_SRC) http://www.multiprecision.org/mpc/download/$(MPC)
+	@wget -q -P $(CLFS_SRC) http://www.multiprecision.org/mpc/download/$(MPC)
 $(MPFR_SRC) :
-	@wget -P $(CLFS_SRC) http://gforge.inria.fr/frs/download.php/32210/$(MPFR)
+	@wget -q -P $(CLFS_SRC) http://gforge.inria.fr/frs/download.php/32210/$(MPFR)
 $(MUSL_SRC) :
-	@wget -P $(CLFS_SRC) http://www.musl-libc.org/releases/$(MUSL)
+	@wget -q -P $(CLFS_SRC) http://www.musl-libc.org/releases/$(MUSL)
 $(OPENSSL_SRC) :
-	@wget -P $(CLFS_SRC) http://www.openssl.org/source/$(OPENSSL)
+	@wget -q -P $(CLFS_SRC) http://www.openssl.org/source/$(OPENSSL)
 $(OPENVPN_SRC) :
-	@wget -P $(CLFS_SRC) http://swupdate.openvpn.org/community/releases/$(OPENVPN)
+	@wget -q -P $(CLFS_SRC) http://swupdate.openvpn.org/community/releases/$(OPENVPN)
 $(TOOLS_SRC) :
 	@git clone --depth 1 https://github.com/raspberrypi/$(TOOLS) $(TOOLS_SRC)
 $(ZLIB_SRC) :
-	@wget -P $(CLFS_SRC) http://zlib.net/$(ZLIB)
+	@wget -q -P $(CLFS_SRC) http://zlib.net/$(ZLIB)
 version-check :
 	@bash --version | head -n1 | cut -d" " -f2-4
 	@echo -n "binutils, "; ld --version | head -n1 | cut -d" " -f3-
