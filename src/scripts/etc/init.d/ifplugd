@@ -3,7 +3,7 @@
 IFPLUGD=/usr/sbin/ifplugd
 ACTION=/etc/ifplugd.action
 INTERFACES="eth0 eth1"
-ARGS="-fMI -u2 -d2"
+ARGS="-fMI -u2 -d2 -q"
 [ -x $IFPLUGD ] || exit 1
 case "$1" in
     start)

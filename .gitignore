@@ -5,3 +5,7 @@ targetfs/
 sd/
 cross-tools/
 src/scripts/etc/openvpn/certs/*
+src/linux/
+src/firmware/
+src/tools/
+*.tar.*

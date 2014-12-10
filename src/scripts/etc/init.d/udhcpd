@@ -16,8 +16,11 @@ case "$1" in
 	check_status "Starting udhcpd"
 	;;
     stop)
-	[ -f $PIDFILE ] && start-stop-daemon -K -q -p $PIDFILE
-	check_status "Stoping udhcpd"
+	if [ -f $PIDFILE ] ; then
+	  start-stop-daemon -K -q -p $PIDFILE
+	  check_status "Stoping udhcpd"
+	  rm $PIDFILE
+	fi
 	;;
     restart)
 	$0 stop
