@@ -12,6 +12,7 @@ case "$1" in
 	;;
     bound)
 	set > $CFG
+	echo "" > $RESOLV_CONF
 	ip addr flush dev $interface
 	ip addr add ${ip}/${mask} dev $interface
 	[ -n "$router" ] && ip route add default via ${router%% *} dev $interface
@@ -43,6 +44,7 @@ case "$1" in
 	    [ -n "$router" ] && ip route add default via ${router%% *} dev $interface
 	fi
 	if [ -n "$REDO_DNS"] ; then
+	    echo "" > $RESOLV_CONF
 	    [ -n "$domain" ] && echo search $domain > $RESOLV_CONF
 	    for i in $dns ; do
 		echo nameserver $i >> $RESOLV_CONF
